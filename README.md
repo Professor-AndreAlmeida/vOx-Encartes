@@ -1,117 +1,98 @@
 # vOx Encartes 🛒✨
 
-> **Transforme Encartes Estáticos em Ativos Digitais com Inteligência Artificial.**
+> **O Estúdio de Criação Local-First para Varejo impulsionado por IA.**
 
-![Status](https://img.shields.io/badge/Status-Beta-blue) ![License](https://img.shields.io/badge/License-MIT-green) ![AI](https://img.shields.io/badge/Powered%20by-Gemini%202.5-purple)
+![React](https://img.shields.io/badge/React-19-blue) ![Gemini](https://img.shields.io/badge/Gemini_API-v1.30-purple) ![License](https://img.shields.io/badge/License-MIT-green) ![Status](https://img.shields.io/badge/Status-Functional-success)
 
-**vOx Encartes** é uma aplicação web **Open Source** e **Local-First** projetada para automatizar o fluxo de trabalho de profissionais de marketing, e-commerce e varejo. O sistema extrai, trata e cataloga produtos a partir de encartes promocionais (PDF/Imagens) utilizando o poder da IA Generativa.
-
-Tudo roda diretamente no seu navegador, garantindo **privacidade total** e **custo zero** de infraestrutura (Serverless).
+**vOx Encartes** é uma aplicação web progressiva projetada para automatizar o recorte, tratamento e catalogação de produtos de encartes de supermercado. Diferente de soluções SaaS tradicionais, ele roda **100% no navegador do usuário**, eliminando custos de servidor e garantindo privacidade absoluta dos dados.
 
 ---
 
-## 🚀 Funcionalidades Principais
+## 🧠 Arquitetura de IA e Modelos
 
-### 🧠 Inteligência Artificial Generativa (BYOK)
-O sistema utiliza sua própria chave de API do **Google Gemini** (Modelo *Bring Your Own Key*).
-- **Gemini 2.5 Flash Image:** Para edições visuais complexas, remoção de fundo e estilização.
-- **Gemini 2.5 Flash:** Para OCR rápido e leitura de preços/nomes de produtos.
+O sistema utiliza o SDK mais recente do Google (`@google/genai`) e orquestra diferentes modelos para tarefas específicas, otimizando custos e qualidade:
 
-### 🏠 Arquitetura Local-First
-Não possuímos banco de dados na nuvem.
-- **IndexedDB:** Todas as imagens, recortes e histórico de edições são salvos no banco de dados do seu navegador.
-- **Privacidade:** Seus dados nunca saem do seu dispositivo, exceto para o processamento momentâneo na API do Google.
+| Agente / Tarefa | Modelo Utilizado | Justificativa Técnica |
+| :--- | :--- | :--- |
+| **OCR & Metadados** | `gemini-2.5-flash` | Modelo multimodal otimizado para extração de texto. Rápido, leve e com alta cota gratuita para leitura de preços/nomes. |
+| **Editor Visual (Padrão)** | `gemini-2.5-flash-image` | Excelente para manipulação de pixels, remoção de fundo e estilização rápida. Custo-benefício ideal. |
+| **Editor Visual (Pro)** | `gemini-3.0-pro-image-preview` | Modelo de raciocínio avançado. Ativado opcionalmente para tarefas que exigem alta fidelidade ou resolução 2K. |
 
-### 📄 Suporte Avançado a Arquivos
-- **PDF Multipáginas:** O sistema lê PDFs, gera miniaturas de todas as páginas e permite selecionar qual página processar em alta resolução.
-- **Formatos de Imagem:** Suporte nativo para JPG, PNG e WebP.
-
-### ✂️ Workspace de Extração Profissional
-Uma área de trabalho estilo "Photoshop" no navegador:
-- **Zoom & Pan:** Navegue por encartes gigantes com facilidade usando zoom (scroll) e ferramenta de mão (espaço).
-- **Seleção Precisa:** Recorte produtos com precisão de pixel.
-- **OCR Automático:** Ao recortar, a IA tenta identificar automaticamente o nome do produto e o preço.
-
-### 🎨 Estúdio de Criação IA (Editor Não-Linear)
-Um editor poderoso onde você conversa com a IA para alterar a imagem:
-- **Tratamento:** Remover fundo, limpar textos (inpainting), melhorar iluminação de estúdio.
-- **Estilo:** Vetorização (Flat Design), Filtros Retrô, Desenho Técnico.
-- **Marketing:** Adicionar selos de oferta, etiquetas de preço e efeitos de destaque "Hero".
-- **Histórico de Sessão:** Crie múltiplas versões da mesma imagem em cadeia (Chaining) e salve apenas a melhor.
+> **Nota:** O sistema implementa **Prompt Chaining**. Cada edição feita pelo usuário gera uma nova imagem que serve de base (input) para a próxima solicitação, permitindo ajustes incrementais complexos.
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 🔄 Workflow Lógico do Sistema
 
-Este projeto foi construído com uma stack moderna e performática:
-
-- **Frontend:** React 19, TypeScript, Vite.
-- **Estilização:** Tailwind CSS, Lucide React (Ícones).
-- **IA Integration:** Google GenAI SDK for Web (`@google/genai`).
-- **Processamento de PDF:** PDF.js.
-- **Storage:** IndexedDB (Nativo).
-
----
-
-## ⚡ Guia de Instalação e Execução
-
-### Pré-requisitos
-- Node.js (v18 ou superior)
-- Gerenciador de pacotes (NPM ou Yarn)
-- Uma API Key do Google AI Studio
-
-### Passo a Passo
-
-1. **Clone o repositório**
-   ```bash
-   git clone https://github.com/Professor-AndreAlmeida/vOx-Encartes.git
-   cd vOx-Encartes
-   ```
-
-2. **Instale as dependências**
-   ```bash
-   npm install
-   ```
-
-3. **Execute o servidor de desenvolvimento**
-   ```bash
-   npm run dev
-   ```
-
-4. **Acesse no navegador**
-   Abra `http://localhost:5173` (ou a porta indicada no terminal).
+1.  **Ingestão (Upload/Render):**
+    *   O usuário carrega um PDF ou Imagem.
+    *   Se for PDF, o sistema renderiza via `PDF.js` em **escala 4.0** (Ultra High Res) para garantir que recortes pequenos tenham densidade de pixels suficiente.
+2.  **Extração (Canvas Workspace):**
+    *   Usuário seleciona a área do produto.
+    *   O recorte é extraído via Canvas API com interpolação de alta qualidade.
+3.  **Processamento Paralelo:**
+    *   **Visual:** O recorte é salvo no `IndexedDB`.
+    *   **Analítico (Background):** O agente OCR analisa a imagem e preenche automaticamente Nome e Preço.
+4.  **Estúdio de Criação (Loop de Edição):**
+    *   Usuário solicita alterações (ex: "Remover fundo", "Vetorizar").
+    *   A IA gera uma nova versão. O usuário pode navegar pelo histórico (Timeline) e reverter se necessário.
+5.  **Persistência & Exportação:**
+    *   Todos os dados são salvos localmente.
+    *   Exportação disponível em PNG individual ou pacote ZIP em lote.
 
 ---
 
-## 🔑 Configuração (Primeiro Acesso)
+## 📊 Análise: Prós e Contras
 
-Ao abrir o sistema pela primeira vez, você verá a tela de **Onboarding**.
+### ✅ Pontos Fortes (Pros)
+*   **Custo Zero de Infra:** Sem backend, sem banco de dados na nuvem (AWS/Firebase), sem custos mensais fixos.
+*   **Privacidade Total:** As imagens dos encartes nunca saem do computador do usuário (exceto o buffer momentâneo enviado para a API do Google para processamento).
+*   **Performance:** A interface é imediata (Optimistic UI) pois não depende de fetch de dados em servidor.
+*   **Qualidade de Imagem:** O pipeline de renderização de PDF foi ajustado para maximizar a nitidez, superando muitos conversores online.
 
-1. Gere sua chave gratuitamente no [Google AI Studio](https://aistudio.google.com/app/api-keys).
-2. Insira a chave no campo solicitado.
-3. (Opcional) Escolha seu nome de usuário.
-4. Pronto! O sistema salvará a chave criptografada no seu navegador.
-
-> **Dica:** Você pode alterar o modelo de IA (ex: testar o `Gemini 3.0 Pro`) no menu de **Configurações**.
-
----
-
-## 🤝 Como Contribuir
-
-O vOx Encartes é um projeto comunitário. Quer ajudar?
-
-1. Faça um **Fork** do projeto.
-2. Crie uma **Branch** para sua feature (`git checkout -b feature/NovaFeature`).
-3. Commit suas mudanças (`git commit -m 'Adicionando suporte a X'`).
-4. Push para a Branch (`git push origin feature/NovaFeature`).
-5. Abra um **Pull Request**.
+### ⚠️ Limitações (Cons)
+*   **Dependência de Hardware:** A renderização de PDFs pesados consome RAM do dispositivo do usuário.
+*   **Limites da API (Erro 429):** No plano gratuito do Google AI Studio, o usuário pode encontrar limites de requisição (Rate Limiting) se fizer muitas edições consecutivas rapidamente.
+*   **Persistência Local:** Se o usuário limpar o cache do navegador ou formatar o PC, os dados são perdidos (recomenda-se usar a função de Backup JSON do app).
 
 ---
 
-## 📝 Licença
+## 🛠️ Stack Tecnológica
 
-Este projeto está sob a licença **MIT**. Sinta-se livre para usar, modificar e distribuir.
+*   **Core:** React 19, Vite 5.
+*   **Estilo:** Tailwind CSS, Lucide React.
+*   **IA:** Google GenAI SDK for Web.
+*   **PDF Engine:** PDF.js (Mozilla).
+*   **Storage:** Native IndexedDB API.
 
 ---
 
-Desenvolvido com ❤️ por **Professor André Almeida**.
+## 🚀 Como Rodar Localmente
+
+1.  **Clone o repositório:**
+    ```bash
+    git clone https://github.com/Professor-AndreAlmeida/vOx-Encartes.git
+    ```
+2.  **Instale as dependências:**
+    ```bash
+    npm install
+    ```
+3.  **Inicie o servidor:**
+    ```bash
+    npm run dev
+    ```
+4.  **Configure a API Key:**
+    *   Ao abrir o app, vá em Configurações.
+    *   Insira sua chave do [Google AI Studio](https://aistudio.google.com/).
+
+---
+
+## 🤝 Contribuição
+
+Este é um projeto de estudo Open Source. Sinta-se à vontade para abrir Issues ou Pull Requests.
+
+
+
+---
+
+**Licença MIT** | Desenvolvido por [Prof. André Almeida](https://github.com/Professor-AndreAlmeida)
