@@ -1,0 +1,5 @@
+{
+  "name": "vOx Encartes",
+  "description": "Processamento automatizado de encartes de supermercado usando Gemini 2.5 Flash Image. Extrai produtos, remove fundos e padroniza imagens via prompts de texto.",
+  "requestFramePermissions": []
+}
